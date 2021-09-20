@@ -15,11 +15,11 @@ public interface UserDao {
 
     void updateUser(User user);
 
-    User getUserById(int id);
+    User getUserById(Long id);
 
     User getUserByName(String name);
 
     List<Role> allUsersRole();
 
-    Role getRoleById(int id);
+    Role getRoleById(Long id);
 }

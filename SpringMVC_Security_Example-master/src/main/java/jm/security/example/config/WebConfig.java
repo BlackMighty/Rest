@@ -1,3 +1,4 @@
+/*
 package jm.security.example.config;
 
 import org.springframework.context.ApplicationContext;
@@ -48,3 +49,4 @@ public class WebConfig implements WebMvcConfigurer {
         registry.viewResolver(resolver);
     }
 }
+*/

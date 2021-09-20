@@ -16,9 +16,9 @@ public interface UserService {
 
     void updateUser(User user);
 
-    User getUserById(int id);
+    User getUserById(Long id);
 
-    Role getRoleById(int id);
+    Role getRoleById(Long id);
 
     void setRole(User user, Long id);
 }

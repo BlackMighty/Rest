@@ -47,7 +47,7 @@ public class AdminRestController {
     }
 
     @GetMapping("/edit/rest/{id}")
-    public User getUserByID(@PathVariable Integer id) {
+    public User getUserByID(@PathVariable Long id) {
         return service.getUserById(id);
     }
 
@@ -60,7 +60,7 @@ public class AdminRestController {
     }
 
     @GetMapping("/delete/rest/{id}")
-    public void deleteUserByID(@PathVariable("id") Integer id) {
+    public void deleteUserByID(@PathVariable("id") Long id) {
         User user = service.getUserById(id);
         service.deleteUser(user);
     }

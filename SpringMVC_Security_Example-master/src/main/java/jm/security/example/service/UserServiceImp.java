@@ -49,12 +49,12 @@ public class UserServiceImp implements UserService {
     }
 
     @Override
-    public User getUserById(int id) {
+    public User getUserById(Long id) {
         return userDao.getUserById(id);
     }
 
     @Override
-    public Role getRoleById(int id) {
+    public Role getRoleById(Long id) {
         return userDao.getRoleById(id);
     }
 
