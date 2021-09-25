@@ -1,167 +1,164 @@
-//------------------ALL-USERS--------------------------------
+$(document).ready(function () {
+    restartTable();
+});
 
-function getUsers() {
 
-    fetch("http://localhost:8080/rest/users")
-        .then((res) => res.json())
-        .then((data) => {
-            let temp = "";
-            data.forEach(function (user) {
+function restartTable() {
+    let tableBody = $("#allUsersTableBody")
 
-                temp += `
-                <tr>
-                <td id="id${user.id}">${user.id}</td>
-                <td id="name${user.id}">${user.name}</td> 
-                <td id="roles${user.id}">${user.roles.map(r => r.role.replace('ROLE_', '')).join(', ')}</td>
-                <td>
-                <button class="btn btn-info btn-md" type="button"
-                data-toggle="modal" data-target="#editModal" 
-                onclick="fillModal(${user.id})">Edit</button></td>
-                <td>
-                <button class="btn btn-danger btn-md" type="button"
-                data-toggle="modal" data-target="#deleteModal" 
-                onclick="fillModal(${user.id})">Delete</button></td>
-              </tr>`;
-            });
-            document.getElementById("usersTable").innerHTML = temp;
-        })
-}
+    tableBody.children().remove();
 
-getUsers()
-
-//------------------fillModals--------------------------------
-
-function fillModal(id) {
-    fetch("http://localhost:8080/rest/findUser/" + id, {
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        }
-    }).then(res => {
-        res.json().then(user => {
-            document.getElementById('id').value = user.id;
-            document.getElementById('editName').value = user.name;
-            document.getElementById('editPassw').value = user.passw;
-
-            document.getElementById('delId').value = user.id;
-            document.getElementById('delName').value = user.name;
-            document.getElementById('delPassw').value = user.passw;
-        })
+    fetch("admin/rest/allusers")
+        .then((response) => {
+            response.json().then(data => data.forEach(function (item, i, data) {
+                let table = createTable(item);
+                tableBody.append(table);
+            }));
+        }).catch(error => {
+        console.log(error);
     });
 }
 
-//------------------SHOW-User--------------------------------
-
-function showUser() {
-    //$("#topNav").css("display", "none");
-    const showUserURL = 'http://localhost:8080/rest/infoUser';
-    fetch(showUserURL)
-        .then((res) => res.json())
-        .then((user) => {
-
-            let temp = "<tr>";
-            temp += `
-                <td>${user.id}</td>
-                <td>${user.name}</td>
-                <td>${user.roles.map(r => r.role.replace('ROLE_', '')).join(', ')}</td>
-            `;
-            temp += "<tr>";
-            document.getElementById("userTable").innerHTML = temp;
-        })
+function createTable(user) {
+    let userRoles = "";
+    for (let i = 0; i < user.roles.length; i++) {
+        userRoles += (" " + user.roles[i].role).replace('ROLE_','');
+        if (i < user.roles.length - 1 ){
+            userRoles += ' ,';
+        }
+    }
+    return `<tr>
+            <td>${user.id}</td>
+            <td>${user.name}</td>
+            <td>${user.lastName}</td>
+            <td>${user.age}</td>
+            <td>${user.email}</td>
+            <td>${user.username}</td>
+            <td>${userRoles}</td>
+            <td>
+                <a  href="/admin/rest/${user.id}" class="btn btn-primary editBtn" >Edit</a>
+            </td>
+            <td>
+                <a  href="/admin/rest/delete/${user.id}" class="btn btn-danger deleteBtn">Delete</a>
+            </td>
+        </tr>`;
 }
 
-showUser();
 
-//------------------NEW-USER--------------------------------
-
-document.getElementById("newUserForm")
-    .addEventListener("submit", newUserForm);
-
-function newUserForm(e) {
-    e.preventDefault();
-
-    let name = document.getElementById("addName").value;
-    let passw = document.getElementById("addPassw").value;
-    let roles = selectRole(Array.from(document.getElementById("addRole").selectedOptions)
-        .map(r => r.value));
-
-    fetch("http://localhost:8080/rest/newuser", {
-        method: "POST",
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            name: name,
-            passw: passw,
-            roles: roles
-        })
-    })
-        .then(() => {
-            document.getElementById("usersTab").click();
-            getUsers();
-            document.getElementById("newUserForm").reset();
-        })
+function getRoles(){
+    let role = [];
+    if (document.getElementById('adminRole').checked || document.getElementById('adminRoleEdit').checked){
+        role.push({id : 1, role : "ROLE_ADMIN"})
+    }
+    if (document.getElementById('userRole').checked || document.getElementById('userRoleEdit').checked){
+        role.push({id : 2, role : "ROLE_USER"})
+    }
+    return role;
 }
 
-//------------------EDIT--------------------------------
 
-function butEdit() {
+document.addEventListener('click', function (event) {
+    event.preventDefault()
 
-    let user = {
-        id: document.getElementById('id').value,
-        name: document.getElementById('editName').value,
-        passw: document.getElementById('editPassw').value,
-        roles: selectRole(Array.from(document.getElementById("editRole").selectedOptions)
-            .map(r => r.value))
+    if ($(event.target).hasClass('AddBtn')) {
+        addUserButton()
     }
 
-    fetch("http://localhost:8080/rest/update", {
-        method: "PUT",
+    if ($(event.target).hasClass('editBtn')) {
+        let href = $(event.target).attr("href");
+        $(".editUser #modalEdit").modal();
+
+        $.get(href, function (user) {
+            $(".editUser #id").val(user.id);
+            $(".editUser #nameEdit").val(user.name);
+            $(".editUser #lastNameEdit").val(user.lastName);
+            $(".editUser #ageEdit").val(user.age);
+            $(".editUser #emailEdit").val(user.email);
+            $(".editUser #usernameEdit").val(user.username);
+            $(".editUser #passwordEdit").val(user.password);
+        });
+    }
+
+    if ($(event.target).hasClass('editBtnCommit')) {
+        let user = {
+            id: $('#id').val(),
+            name: $('#nameEdit').val(),
+            lastName: $('#lastNameEdit').val(),
+            age: $('#ageEdit').val(),
+            email: $('#emailEdit').val(),
+            username: $('#usernameEdit').val(),
+            password: $('#passwordEdit').val(),
+            roles: getRoles()
+
+        }
+        editUser(user)
+        console.log(user);
+    }
+
+    if ($(event.target).hasClass('deleteBtn')) {
+        let href = $(event.target).attr("href");
+        deleteUser(href)
+    }
+
+    if ($(event.target).hasClass('userPnl')) {
+        document.location.replace("/user");
+    }
+
+    if ($(event.target).hasClass('adminPnl')) {
+        document.location.replace("/admin");
+    }
+
+    if ($(event.target).hasClass('logout')) {
+        document.location.replace("/logout");
+    }
+
+});
+
+function addUserButton(){
+    let user = {
+        name: $("#name").val(),
+        lastName: $("#lastName").val(),
+        age: $("#age").val(),
+        email: $("#email").val(),
+        username: $("#username").val(),
+        password: $("#password").val(),
+        roles: getRoles()
+    }
+    console.log(user)
+    fetch("admin/rest/newUser", {
+        credentials: 'include',
+        method: 'POST',
         headers: {
-            'Accept': 'application/json',
             'Content-Type': 'application/json'
         },
         body: JSON.stringify(user)
-
     })
-    $("#editModal .close").click();
-    reTable();
+        .then(() => document.location.replace("/admin"))
+        .then(() => restartTable())
 }
 
-//------------------select-ROLE--------------------------------
-function selectRole(r) {
-    let roles = [];
-    if (r.indexOf("USER") >= 0) {
-        roles.push({"id": 1});
-    }
-    if (r.indexOf("ADMIN") >= 0) {
-        roles.push({"id": 2});
-    }
-    return roles;
-}
-
-//------------------DELETE--------------------------------
-
-function butDelete() {
-    fetch("http://localhost:8080/rest/delete/" + document.getElementById('delId').value, {
-        method: 'DELETE',
+function deleteUser(href) {
+    fetch(href, {
+        credentials: 'include',
+        method: "DELETE",
         headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        },
+            "Content-Type": "application/json;charset=utf-8"
+        }
     })
-
-    $("#deleteModal .close").click();
-    reTable();
+        .then(() => restartTable());
 }
 
-//------------------reTable--------------------------------
-
-function reTable() {
-    let table = document.getElementById('usersTable')
-    if (table.rows.length > 1) {
-        table.deleteRow(1);
-    }
-    setTimeout(getUsers, 140)
+function editUser(user) {
+    fetch("admin/rest/edit", {
+        credentials: 'include',
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json;charset=utf-8"
+        },
+        body: JSON.stringify(user)
+    }).then(function (response) {
+        $('input').val('');
+        $('.editUser #modalEdit').modal('hide');
+        restartTable();
+    })
 }

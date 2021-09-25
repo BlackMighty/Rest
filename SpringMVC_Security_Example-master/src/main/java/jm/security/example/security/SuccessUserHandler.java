@@ -1,5 +1,6 @@
 package jm.security.example.security;
 
+import jm.security.example.repo.UserRepo;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -12,12 +13,21 @@ import java.util.Set;
 
 @Component
 public class SuccessUserHandler implements AuthenticationSuccessHandler {
-    // Spring Security использует объект Authentication, пользователя авторизованной сессии.
+
+    private final UserRepo userRepo;
+
+    public SuccessUserHandler(UserRepo userRepo) {
+        this.userRepo = userRepo;
+    }
+
     @Override
     public void onAuthenticationSuccess(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Authentication authentication) throws IOException {
+
         Set<String> roles = AuthorityUtils.authorityListToSet(authentication.getAuthorities());
-        if (roles.contains("ROLE_USER")) {
-            httpServletResponse.sendRedirect("user");
+        if (roles.contains("ROLE_ADMIN")){
+            httpServletResponse.sendRedirect("/admin");
+        } else if (roles.contains("ROLE_USER")) {
+            httpServletResponse.sendRedirect("/user" );
         } else {
             httpServletResponse.sendRedirect("/");
         }
